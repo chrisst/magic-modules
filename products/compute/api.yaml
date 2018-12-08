@@ -1133,7 +1133,6 @@ objects:
           address field is a single IP address.
 
           This field is not applicable to addresses with addressType=EXTERNAL.
-        min_version: beta
       - !ruby/object:Api::Type::Enum
         name: 'addressType'
         description: |
@@ -1155,7 +1154,6 @@ objects:
           This should only be set when using an Internal address.
         values:
         - :VPC_PEERING
-        min_version: beta
       - !ruby/object:Api::Type::ResourceRef
         name: 'network'
         resource: 'Network'
@@ -1166,7 +1164,6 @@ objects:
           any reserved IP ranges referring to it.
 
           This should only be set when using an Internal address.
-        min_version: beta
       # status is not useful for state convergence
       # users[] is not useful for state convergence
   - !ruby/object:Api::Resource
