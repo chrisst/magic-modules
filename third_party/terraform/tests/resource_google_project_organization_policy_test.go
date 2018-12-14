@@ -74,6 +74,7 @@ func testAccProjectOrganizationPolicy_boolean(t *testing.T) {
 
 func testAccProjectOrganizationPolicy_list_allowAll(t *testing.T) {
 	projectId := getTestProjectFromEnv()
+	tfName := "list-allowall"
 
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -81,8 +82,8 @@ func testAccProjectOrganizationPolicy_list_allowAll(t *testing.T) {
 		CheckDestroy: testAccCheckGoogleProjectOrganizationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectOrganizationPolicyConfig_list_allowAll(projectId),
-				Check:  testAccCheckGoogleProjectOrganizationListPolicyAll("list", "ALLOW"),
+				Config: testAccProjectOrganizationPolicyConfig_list_allowAll(tfName, projectId),
+				Check:  testAccCheckGoogleProjectOrganizationListPolicyAll(tfName, "ALLOW"),
 			},
 		},
 	})
@@ -90,6 +91,7 @@ func testAccProjectOrganizationPolicy_list_allowAll(t *testing.T) {
 
 func testAccProjectOrganizationPolicy_list_allowSome(t *testing.T) {
 	project := getTestProjectFromEnv()
+	tfName := "list-allowsome"
 	canonicalProject := canonicalProjectId(project)
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
@@ -97,8 +99,8 @@ func testAccProjectOrganizationPolicy_list_allowSome(t *testing.T) {
 		CheckDestroy: testAccCheckGoogleProjectOrganizationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectOrganizationPolicyConfig_list_allowSome(project),
-				Check:  testAccCheckGoogleProjectOrganizationListPolicyAllowedValues("list", []string{canonicalProject}),
+				Config: testAccProjectOrganizationPolicyConfig_list_allowSome(tfName, project),
+				Check:  testAccCheckGoogleProjectOrganizationListPolicyAllowedValues(tfName, []string{canonicalProject}),
 			},
 		},
 	})
@@ -106,14 +108,15 @@ func testAccProjectOrganizationPolicy_list_allowSome(t *testing.T) {
 
 func testAccProjectOrganizationPolicy_list_denySome(t *testing.T) {
 	projectId := getTestProjectFromEnv()
+	tfName := "list-denysome"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGoogleProjectOrganizationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectOrganizationPolicyConfig_list_denySome(projectId),
-				Check:  testAccCheckGoogleProjectOrganizationListPolicyDeniedValues("list", DENIED_ORG_POLICIES),
+				Config: testAccProjectOrganizationPolicyConfig_list_denySome(tfName, projectId),
+				Check:  testAccCheckGoogleProjectOrganizationListPolicyDeniedValues(tfName, DENIED_ORG_POLICIES),
 			},
 		},
 	})
@@ -121,18 +124,19 @@ func testAccProjectOrganizationPolicy_list_denySome(t *testing.T) {
 
 func testAccProjectOrganizationPolicy_list_update(t *testing.T) {
 	projectId := getTestProjectFromEnv()
+	tfName := "list-update"
 	resource.Test(t, resource.TestCase{
 		PreCheck:     func() { testAccPreCheck(t) },
 		Providers:    testAccProviders,
 		CheckDestroy: testAccCheckGoogleProjectOrganizationPolicyDestroy,
 		Steps: []resource.TestStep{
 			{
-				Config: testAccProjectOrganizationPolicyConfig_list_allowAll(projectId),
-				Check:  testAccCheckGoogleProjectOrganizationListPolicyAll("list", "ALLOW"),
+				Config: testAccProjectOrganizationPolicyConfig_list_allowAll(tfName, projectId),
+				Check:  testAccCheckGoogleProjectOrganizationListPolicyAll(tfName, "ALLOW"),
 			},
 			{
-				Config: testAccProjectOrganizationPolicyConfig_list_denySome(projectId),
-				Check:  testAccCheckGoogleProjectOrganizationListPolicyDeniedValues("list", DENIED_ORG_POLICIES),
+				Config: testAccProjectOrganizationPolicyConfig_list_denySome(tfName, projectId),
+				Check:  testAccCheckGoogleProjectOrganizationListPolicyDeniedValues(tfName, DENIED_ORG_POLICIES),
 			},
 		},
 	})
@@ -299,9 +303,9 @@ resource "google_project_organization_policy" "bool" {
 `, pid, enforced)
 }
 
-func testAccProjectOrganizationPolicyConfig_list_allowAll(pid string) string {
+func testAccProjectOrganizationPolicyConfig_list_allowAll(tfName, pid string) string {
 	return fmt.Sprintf(`
-resource "google_project_organization_policy" "list" {
+resource "google_project_organization_policy" "%s" {
   project    = "%s"
   constraint = "constraints/serviceuser.services"
 
@@ -311,13 +315,13 @@ resource "google_project_organization_policy" "list" {
     }
   }
 }
-`, pid)
+`, tfName, pid)
 }
 
-func testAccProjectOrganizationPolicyConfig_list_allowSome(pid string) string {
+func testAccProjectOrganizationPolicyConfig_list_allowSome(tfName, pid string) string {
 	return fmt.Sprintf(`
 
-resource "google_project_organization_policy" "list" {
+resource "google_project_organization_policy" "%s" {
   project    = "%s"
   constraint = "constraints/compute.trustedImageProjects"
 
@@ -327,13 +331,13 @@ resource "google_project_organization_policy" "list" {
     }
   }
 }
-`, pid, pid)
+`, tfName, pid, pid)
 }
 
-func testAccProjectOrganizationPolicyConfig_list_denySome(pid string) string {
+func testAccProjectOrganizationPolicyConfig_list_denySome(tfName, pid string) string {
 	return fmt.Sprintf(`
 
-resource "google_project_organization_policy" "list" {
+resource "google_project_organization_policy" "%s" {
   project    = "%s"
   constraint = "constraints/serviceuser.services"
 
@@ -346,7 +350,7 @@ resource "google_project_organization_policy" "list" {
     }
   }
 }
-`, pid)
+`, tfName, pid)
 }
 
 func testAccProjectOrganizationPolicyConfig_restore_defaultTrue(pid string) string {
