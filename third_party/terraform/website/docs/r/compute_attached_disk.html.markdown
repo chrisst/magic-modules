@@ -77,7 +77,7 @@ The following arguments are supported:
   The mode in which to attach this disk, either READ_WRITE or
 	READ_ONLY. If not specified, the default is to attach the disk in
 	READ_WRITE mode.
-	
+
 	Possible values:
 	  "READ_ONLY"
 	  "READ_WRITE"
@@ -98,3 +98,5 @@ Attached Disk can be imported the following ways:
 $ terraform import google_compute_disk.default projects/{{project}}/zones/{{zone}}/disks/{{instance.name}}:{{disk.name}}
 $ terraform import google_compute_disk.default {{project}}/{{zone}}/{{instance.name}}:{{disk.name}}
 ```
+
+**Note:** For region disks, the `zone` should be that of the compute instance.
