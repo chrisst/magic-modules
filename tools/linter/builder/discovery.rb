@@ -166,10 +166,10 @@ class DiscoveryProduct
     @resources = @results
     resource_path.split('.').each{|k| @resources = @resources[k]}
 
-    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless @resources[resource.pluralize.camelize(:lower)]
-    return unless @resources[resource.pluralize.camelize(:lower)]
+    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless @resources[resource.pluralize.downcase]
+    return unless @resources[resource.pluralize.downcase]
 
-    @resources[resource.pluralize.camelize(:lower)]['methods']
+    @resources[resource.pluralize.downcase]['methods']
   end
 
   def get_product

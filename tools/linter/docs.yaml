@@ -1,86 +1,85 @@
+# - !ruby/object:Docs
+#   name: Google Compute Engine
+#   prefix: gcompute
+#   url: 'https://www.googleapis.com/discovery/v1/apis/compute/v1/rest'
+#   scopes:
+#     - 'https://www.googleapis.com/auth/compute'
+#   output: output.yaml
+#   overrides: []
+#   objects:
+#     - Address
+#     - Autoscaler
+#     - BackendBucket
+#     - BackendService
+#     - Disk
+#     - DiskType
+#     - Firewall
+#     - ForwardingRule
+#     - GlobalAddress
+#     - GlobalForwardingRule
+#     - HealthCheck
+#     - HttpHealthCheck
+#     - HttpsHealthCheck
+#     - Image
+#     - Instance
+#     - InterconnectAttachment
+#     - InstanceGroup
+#     - InstanceGroupManager
+#     - InstanceTemplate
+#     - License
+#     - MachineType
+#     - Network
+#     - Region
+#     - RegionAutoscaler
+#     - Route
+#     - Router
+#     - Snapshot
+#     - SslCertificate
+#     - SslPolicy
+#     - Subnetwork
+#     - TargetHttpProxy
+#     - TargetHttpsProxy
+#     - TargetPool
+#     - TargetSslProxy
+#     - TargetTcpProxy
+#     - TargetVpnGateway
+#     - UrlMap
+#     - VpnTunnel
+#     - Zone
+# - !ruby/object:Docs
+#   name: Google Storage Engine
+#   prefix: gstorage
+#   url: 'https://www.googleapis.com/discovery/v1/apis/storage/v1/rest'
+#   scopes:
+#     - 'https://www.googleapis.com/auth/devstorage.readwrite'
+#   output: output_storage.yaml
+#   objects:
+#     - Bucket
+#     - BucketAccessControl
+#     - ObjectAccessControl
+# - !ruby/object:Docs
+#   name: Google Compute Engine
+#   prefix: gcompute
+#   url: 'https://www.googleapis.com/discovery/v1/apis/monitoring/v3/rest'
+#   scopes:
+#     - 'https://www.googleapis.com/auth/compute'
+#   output: output_monitoring.yaml
+#   overrides: []
+#   resource_path: resources.projects.resources
+#   objects:
+#     - Group
+#     - NotificationChannel
+#     - UptimeCheckConfig
+#     - TimeSeries
+#     - MetricDescriptors
 - !ruby/object:Docs
-  name: Google Compute Engine
-  prefix: gcompute
-  url: 'https://www.googleapis.com/discovery/v1/apis/compute/v1/rest'
+  name: Google Cloud Run
+  url: 'https://run.googleapis.com/$discovery/rest?version=v1alpha1'
   scopes:
     - 'https://www.googleapis.com/auth/compute'
-  output: output.yaml
+  output: output_cloudrun.yaml
   overrides: []
+  resource_path: resources.projects.resources.locations.resources
   objects:
-    - Address
-    - Autoscaler
-    - BackendBucket
-    - BackendService
-    - Disk
-    - DiskType
-    - Firewall
-    - ForwardingRule
-    - GlobalAddress
-    - GlobalForwardingRule
-    - HealthCheck
-    - HttpHealthCheck
-    - HttpsHealthCheck
-    - Image
-    - Instance
-    - InterconnectAttachment
-    - InstanceGroup
-    - InstanceGroupManager
-    - InstanceTemplate
-    - License
-    - MachineType
-    - Network
-    - Region
-    - RegionAutoscaler
-    - Route
-    - Router
-    - Snapshot
-    - SslCertificate
-    - SslPolicy
-    - Subnetwork
-    - TargetHttpProxy
-    - TargetHttpsProxy
-    - TargetPool
-    - TargetSslProxy
-    - TargetTcpProxy
-    - TargetVpnGateway
-    - UrlMap
-    - VpnTunnel
-    - Zone
-- !ruby/object:Docs
-  name: Google DNS
-  prefix: gdns
-  url: 'https://www.googleapis.com/discovery/v1/apis/dns/v1/rest'
-  scopes:
-    - 'https://www.googleapis.com/auth/dns'
-  output: output_dns.yaml
-  overrides:
-    - overrides_dns.yaml
-  objects:
-    - ManagedZone
-    - ResourceRecordSet
-- !ruby/object:Docs
-  name: Google Storage Engine
-  prefix: gstorage
-  url: 'https://www.googleapis.com/discovery/v1/apis/storage/v1/rest'
-  scopes:
-    - 'https://www.googleapis.com/auth/devstorage.readwrite'
-  output: output_storage.yaml
-  objects:
-    - Bucket
-    - BucketAccessControl
-    - ObjectAccessControl
-- !ruby/object:Docs
-  name: Google Compute Engine
-  prefix: gcompute
-  url: 'https://www.googleapis.com/discovery/v1/apis/monitoring/v3/rest'
-  scopes:
-    - 'https://www.googleapis.com/auth/compute'
-  output: output_monitoring.yaml
-  overrides: []
-  resource_path: resources.projects.resources
-  objects:
-    - Group
-    - NotificationChannel
-    - UptimeCheckConfig
-    - TimeSeries
-    - MetricDescriptors
+    - Service
+    - DomainMapping
