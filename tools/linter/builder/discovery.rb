@@ -23,7 +23,7 @@ require 'api/async'
 TYPES = {
   'string': 'String',
   'boolean': 'Boolean',
-  'object': 'NameValues',
+  'object': 'KeyValuePairs',
   'integer': 'Integer',
   'number': 'Double',
   'array': 'Array'
@@ -46,14 +46,14 @@ class DiscoveryProperty
     prop = Module.const_get("Api::Type::#{type}").new
     prop.name = @name
     prop.description = @schema.dig('description')
+    if deprecated?
+      puts "WARN rejecting #{prop.name}"
+      return nil
+    end
     prop.output = output?
     prop.values = enum if @schema.dig('enum')
     prop.properties = nested if prop.is_a?(Api::Type::NestedObject)
     prop.item_type = array if prop.is_a?(Api::Type::Array)
-    if prop.is_a?(Api::Type::NameValues)
-      prop.key_type = 'Api::Type::String'
-      prop.value_type = 'Api::Type::String'
-    end
     prop
   end
 
@@ -67,7 +67,22 @@ class DiscoveryProperty
   end
 
   def output?
-    (@schema.dig('description') || '').downcase.include?('output only')
+    description = (@schema.dig('description') || '').downcase
+    description.include?('output only') || description.include?('read-only')
+  end
+
+  def deprecated?
+    description = (@schema.dig('description') || '').downcase
+    if description.include?('not currently supported by cloud run') ||
+      description.include?('not supported by cloud run') ||
+      description.include?('not currently populated by cloud run')
+      return true
+    end
+    if description.downcase.include?('supported') || description.downcase.include?('deprecated')
+      # puts "\n**#{@name}**\n#{description}\n"
+      return true
+    end
+    false
   end
 
   def enum

@@ -512,6 +512,13 @@ module Api
       end
     end
 
+    # An array of string -> string key -> value pairs, such as labels.
+    # While this is technically a map, it's split out because it's a much
+    # simpler property to generate and means we can avoid conditional logic
+    # in Map.
+    class KeyValuePairs < Composite
+    end
+
     # Represents an array of name=value pairs, and stores its items' type
     class NameValues < Composite
       # The fields which can be overridden in provider.yaml.
