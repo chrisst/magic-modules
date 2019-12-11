@@ -72,14 +72,27 @@
 #     - UptimeCheckConfig
 #     - TimeSeries
 #     - MetricDescriptors
+# - !ruby/object:Docs
+#   name: Google Cloud Run
+#   url: 'https://run.googleapis.com/$discovery/rest?version=v1alpha1'
+#   scopes:
+#     - 'https://www.googleapis.com/auth/compute'
+#   output: output_cloudrun.yaml
+#   overrides: []
+#   resource_path: resources.projects.resources.locations.resources
+#   objects:
+#     - Service
+#     - DomainMapping
 - !ruby/object:Docs
-  name: Google Cloud Run
-  url: 'https://run.googleapis.com/$discovery/rest?version=v1alpha1'
+  name: Google Game Services
+  url: 'http://localhost:8080/gameservices_service.json'
   scopes:
     - 'https://www.googleapis.com/auth/compute'
-  output: output_cloudrun.yaml
+  output: game_services.yaml
   overrides: []
   resource_path: resources.projects.resources.locations.resources
   objects:
-    - Service
-    - DomainMapping
+    - AllocationPolicy
+    - GameServerDeployment
+    - Realm
+    - ScalingPolicy

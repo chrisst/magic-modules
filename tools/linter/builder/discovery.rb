@@ -162,10 +162,14 @@ class DiscoveryProduct
   def initialize(doc)
     @doc = doc
     @results = send_request(@doc.url)
+    if doc.name == 'Google Game Services'
+      @results = @results['derivedData']['discovery'][0]['content']
+    end
   end
 
   def get_resources
     @results['schemas'].map do |name, _|
+      # require 'pry'; binding.pry
       next unless @doc.objects.include?(name)
       get_resource(name).resource
     end.compact
@@ -181,10 +185,12 @@ class DiscoveryProduct
     @resources = @results
     resource_path.split('.').each{|k| @resources = @resources[k]}
 
-    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless @resources[resource.pluralize.downcase]
-    return unless @resources[resource.pluralize.downcase]
+    resource_name = resource.pluralize[0].downcase
 
-    @resources[resource.pluralize.downcase]['methods']
+    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless @resources[resource.pluralize.camelize]
+    return unless @resources[resource.pluralize.camelize]
+
+    @resources[resource.pluralize.camelize]['methods']
   end
 
   def get_product
@@ -212,6 +218,7 @@ class DiscoveryProduct
   end
 
   def base_url_format(url)
+    return if url.nil?
     url.gsub('projects/', '').gsub('{', '{{').gsub('}', '}}')
   end
 end
