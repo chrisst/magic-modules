@@ -21,10 +21,8 @@ Metrics/ClassLength:
   Exclude:
     - 'google/yaml_validator.rb'
     - 'provider/core.rb'
-    - 'provider/puppet.rb'
     - 'provider/legacy_test_data_formatter.rb'
     # TODO(alexstephen): Remove this when generate_object is removed
-    - 'provider/chef.rb'
     - 'tools/end2end/tester_base.rb'
 
 Metrics/ModuleLength:
@@ -37,6 +35,9 @@ Metrics/MethodLength:
 Security/Eval:
   Exclude:
     - 'provider/legacy_test_data_generator.rb'
+
+Style/NegatedIf:
+  Enabled: false
 
 Style/FrozenStringLiteralComment:
   Enabled: false

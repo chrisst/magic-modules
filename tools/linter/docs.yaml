@@ -86,8 +86,6 @@
 - !ruby/object:Docs
   name: Google Game Services
   url: 'http://localhost:8080/gameservices_service.json'
-  scopes:
-    - 'https://www.googleapis.com/auth/compute'
   output: game_services.yaml
   overrides: []
   resource_path: resources.projects.resources.locations.resources

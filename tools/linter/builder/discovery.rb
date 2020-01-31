@@ -33,16 +33,20 @@ class DiscoveryProperty
   attr_reader :schema
   attr_reader :name
 
-  attr_reader :__product
-
   def initialize(name, schema, product)
     @name = name
     @schema = schema
-
     @__product = product
+
+    # if type == "NestedObject"
+    #   # TODO build properties
+    # end
+    # if type == "Array"
+    #   # TODO build array
+    # end
   end
 
-  def get_property
+  def build_api_property
     prop = Module.const_get("Api::Type::#{type}").new
     prop.name = @name
     prop.description = @schema.dig('description')
@@ -52,8 +56,8 @@ class DiscoveryProperty
     end
     prop.output = output?
     prop.values = enum if @schema.dig('enum')
-    prop.properties = nested if prop.is_a?(Api::Type::NestedObject)
-    prop.item_type = array if prop.is_a?(Api::Type::Array)
+    prop.properties = nested if type == "NestedObject"
+    prop.item_type = array if type == "Array"
     prop
   end
 
@@ -78,7 +82,7 @@ class DiscoveryProperty
       description.include?('not currently populated by cloud run')
       return true
     end
-    if description.downcase.include?('supported') || description.downcase.include?('deprecated')
+    if description.downcase.include?('deprecated')
       # puts "\n**#{@name}**\n#{description}\n"
       return true
     end
@@ -91,9 +95,10 @@ class DiscoveryProperty
 
   def nested
     if @schema.dig('$ref')
-      @__product.get_resource(@schema.dig('$ref')).properties
+      @__product.build_resource(@schema.dig('$ref')).properties.map{|p| p.build_api_property}
     else
-      DiscoveryResource.new(@schema, @__product).properties
+      # TODO - pull this from DiscoveryProduct.resources instead of building a new one.
+      DiscoveryResource.new(@schema, @__product).properties.map{|p| p.build_api_property}
     end
   end
 
@@ -102,9 +107,9 @@ class DiscoveryProperty
     if (!schema_type && @schema.dig('items', '$ref')) || @schema.dig('items', 'properties')
       prop = Api::Type::NestedObject.new
       if @schema.dig('items', '$ref')
-        prop.properties = @__product.get_resource(@schema.dig('items', '$ref')).properties
+        prop.properties = @__product.build_resource(@schema.dig('items', '$ref')).properties.map{|p| p.build_api_property}
       else
-        prop.properties = DiscoveryResource.new(@schema.dig('items'), @__product).properties
+        prop.properties = DiscoveryResource.new(@schema.dig('items'), @__product).properties.map{|p| p.build_api_property}
       end
       return prop
     end
@@ -116,12 +121,12 @@ end
 # Two sections: schema (properties) and methods
 class DiscoveryResource
   attr_reader :schema
-
-  attr_reader :__product
+  attr_reader :properties
 
   def initialize(schema, product)
     @schema = schema
     @__product = product
+    @properties = build_properties
 
   end
 
@@ -129,22 +134,25 @@ class DiscoveryResource
     !@schema.nil?
   end
 
-  def resource
-    @methods = @__product.get_methods_for_resource(@schema.dig('id'), @__product.doc.resource_path)
+  def build_api_resource(resource_path)
+    # require 'pry'; binding.pry
+    methods = @__product.get_methods_for_resource(@schema.dig('id'), resource_path)
 
     res = Api::Resource.new
     res.name = @schema.dig('id')
-    res.kind = @schema.dig('properties', 'kind', 'default')
-    res.base_url = base_url_format(@methods['list']['path'])
+    # res.kind = @schema.dig('properties', 'kind', 'default')
+    # TODO - better way of getting base_url_format - this is often wrong?
+    res.base_url = base_url_format(methods['list']['path'])
     res.description = @schema.dig('description')
-    res.properties = properties
+
+    res.properties = @properties.map{|p| p.build_api_property }
     res
   end
 
-  def properties
+  def build_properties
     @schema.dig('properties')
            .reject { |k, _| k == 'kind' }
-           .map { |k, v| DiscoveryProperty.new(k, v, @__product).get_property }
+           .map { |k, v| DiscoveryProperty.new(k, v, @__product) }
   end
 
   private
@@ -154,53 +162,63 @@ class DiscoveryResource
   end
 end
 
-# Responsible for grabbing Discovery Docs and getting resources from it
+# Responsible for grabbing Discovery Docs and surfacing resources from it
 class DiscoveryProduct
   attr_reader :results
-  attr_reader :doc
+  attr_reader :resources
 
-  def initialize(doc)
-    @doc = doc
-    @results = send_request(@doc.url)
-    if doc.name == 'Google Game Services'
-      @results = @results['derivedData']['discovery'][0]['content']
-    end
+  def initialize(doc_url)
+    @results = send_request(doc_url)
+    @resources = build_resources
+
   end
 
-  def get_resources
+  def build_api_product(targets, resource_path='')
+    product = Api::Product.new
+    # product.name = @doc.name
+    # product.prefix = @doc.prefix
+    # product.scopes = @doc.scopes
+    # product.versions = [version]
+    # resources = build_resources
+
+    api_resources = @resources.map do |r|
+      next unless targets.include?( r.schema.dig('id') )
+      r.build_api_resource(resource_path)
+    end.compact
+    product.objects = api_resources
+
+    product
+  end
+
+  def fetch_resource(name, schema_path=nil)
+    raise 'unsupported' if !schema_path.nil?
+    if !@results['schemas'].key?(name)
+      raise "cannot find #{name} in schemas. \n Options are #{@results['schemas'].keys}"
+    end
+
+    DiscoveryResource.new(@results['schemas'][name], self)
+  end
+
+  def build_resources
     @results['schemas'].map do |name, _|
-      # require 'pry'; binding.pry
-      next unless @doc.objects.include?(name)
-      get_resource(name).resource
+      build_resource(name)
     end.compact
   end
 
-  def get_resource(resource)
-    DiscoveryResource.new(@results['schemas'][resource], self)
+  def build_resource(name)
+    DiscoveryResource.new(@results['schemas'][name], self)
   end
 
   def get_methods_for_resource(resource, resource_path = nil)
     resource_path = 'resources' if resource_path.nil?
     # Discovery docs aren't created equal and some define resources at different nesting levels.
-    @resources = @results
-    resource_path.split('.').each{|k| @resources = @resources[k]}
+    resources = @results
+    resource_path.split('.').each{|k| resources = resources[k]}
 
-    resource_name = resource.pluralize[0].downcase
+    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless resources[resource.pluralize.camelize]
+    return unless resources[resource.pluralize.camelize]
 
-    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless @resources[resource.pluralize.camelize]
-    return unless @resources[resource.pluralize.camelize]
-
-    @resources[resource.pluralize.camelize]['methods']
-  end
-
-  def get_product
-    product = Api::Product.new
-    product.name = @doc.name
-    product.prefix = @doc.prefix
-    product.scopes = @doc.scopes
-    product.versions = [version]
-    product.objects = get_resources
-    product
+    resources[resource.pluralize.camelize]['methods']
   end
 
   private

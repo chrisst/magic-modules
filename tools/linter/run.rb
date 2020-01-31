@@ -24,7 +24,7 @@ $LOAD_PATH.unshift File.join(File.dirname(__FILE__), '../../')
 Dir.chdir(File.join(File.dirname(__FILE__), '../../'))
 
 require 'tools/linter/builder/discovery'
-require 'tools/linter/builder/docs'
+# require 'tools/linter/builder/docs'
 require 'tools/linter/builder/override'
 
 require 'optparse'
@@ -49,22 +49,33 @@ module Api
   end
 end
 
-doc_file = 'tools/linter/docs.yaml'
+# doc_file = 'tools/linter/docs.yaml'
+targets = []
+doc_url = 'http://localhost:8080/gameservices_service.json'
+doc_url = nil
+resource_path = ''
 
 OptionParser.new do |opts|
-  opts.banner = "Discovery doc runner. Usage: run.rb [docs.yaml]"
-  opts.on("-f", "--file [file]") { |file| doc_file = file }
+  opts.banner = 'Discovery doc runner. Usage: run.rb [docs.yaml]'
+  opts.on('-u', '--url URL', 'Required. Url of the discovery doc.') { |url| doc_url = url }
+  opts.on('-t', '--targets [target1,target2]',
+          'Required. Comma separated list of targets. eg: Disk,RegionDisk') do |arg|
+    targets = arg.split(',')
+  end
+  opts.on('-p', '--path [path.to.results]',
+          'JSON path to traverse to the results. eg: resources.projects.resources') do |path|
+    resource_path = path
+  end
 end.parse!
 
-docs = YAML::load(File.read(doc_file))
+raise 'Targets required. Use --help to see usage.' if targets.empty?
+raise 'URL required. Use --help to see usage.' if doc_url.nil?
 
-docs.each do |doc|
-  product = DiscoveryProduct.new(doc)
-  product_obj = product.get_product
-  (doc.overrides || []).each do |override|
-    override = DiscoveryOverride::Runner.new(product_obj, override)
-    override.run
-    product_obj = override.product
-  end
-  File.write(doc.output, product_obj.to_yaml)
-end
+dp = DiscoveryProduct.new(doc_url)
+# dp.filter_results('derivedData.discovery.0.content')
+dp.build_resources
+api = dp.build_api_product(targets, resource_path)
+# TODO - loop through targets and call build Resource
+# require 'pry'; binding.pry
+puts api.to_yaml
+
