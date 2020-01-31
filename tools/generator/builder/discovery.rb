@@ -54,7 +54,7 @@ class DiscoveryProperty
       puts "WARN rejecting #{prop.name}"
       return nil
     end
-    prop.output = output?
+    prop.output = output? if output? # output:false is default so omit it.
     prop.values = enum if @schema.dig('enum')
     prop.properties = nested if type == "NestedObject"
     prop.item_type = array if type == "Array"
@@ -72,7 +72,7 @@ class DiscoveryProperty
 
   def output?
     description = (@schema.dig('description') || '').downcase
-    description.include?('output only') || description.include?('read-only')
+    val = description.include?('output only') || description.include?('read-only')
   end
 
   def deprecated?
@@ -141,8 +141,9 @@ class DiscoveryResource
     res = Api::Resource.new
     res.name = @schema.dig('id')
     # res.kind = @schema.dig('properties', 'kind', 'default')
-    # TODO - better way of getting base_url_format - this is often wrong?
-    res.base_url = base_url_format(methods['list']['path'])
+    # require 'pry'; binding.pry
+    url_key = methods.dig('list', 'flatPath') ? 'flatPath' : 'path'
+    res.base_url = base_url_format(methods.dig('list', url_key))
     res.description = @schema.dig('description')
 
     res.properties = @properties.map{|p| p.build_api_property }
@@ -158,6 +159,7 @@ class DiscoveryResource
   private
 
   def base_url_format(url)
+    return if url.nil?
     "projects/#{url.gsub('{', '{{').gsub('}', '}}')}"
   end
 end
@@ -173,7 +175,7 @@ class DiscoveryProduct
 
   end
 
-  def build_api_product(targets, resource_path='')
+  def build_api_product(targets, resource_path=nil)
     product = Api::Product.new
     # product.name = @doc.name
     # product.prefix = @doc.prefix
@@ -210,13 +212,13 @@ class DiscoveryProduct
   end
 
   def get_methods_for_resource(resource, resource_path = nil)
-    resource_path = 'resources' if resource_path.nil?
+    resource_path = 'resources' if resource_path.nil? or resource_path.empty?
     # Discovery docs aren't created equal and some define resources at different nesting levels.
     resources = @results
     resource_path.split('.').each{|k| resources = resources[k]}
 
-    raise "Cannot find #{resource} at api path: root.#{resource_path}" unless resources[resource.pluralize.camelize]
-    return unless resources[resource.pluralize.camelize]
+    # raise "Cannot find #{resource} at api path: root.#{resource_path}" unless resources[resource.pluralize.camelize]
+    return {} unless resources[resource.pluralize.camelize]
 
     resources[resource.pluralize.camelize]['methods']
   end
