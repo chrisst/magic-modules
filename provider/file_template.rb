@@ -81,7 +81,7 @@ module Provider
         run_formatter("python3 -m black --line-length 160 -S #{path}")
       elsif path.end_with?('.go') && @env[:goformat_enabled]
         run_formatter("gofmt -w -s #{path}")
-        run_formatter("goimports -w #{path}")
+        # run_formatter("goimports -w #{path}")
       end
     end
 

@@ -74,7 +74,7 @@ The following arguments are supported:
 
 * `project` -
   (Optional)
-  The project that the referenced compute instance is a part of. If `instance` is referenced by its
+  The porject that the referenced compute instance is a part of. If `instance` is referenced by its
   `self_link` the project defined in the link will take precedence.
 
 * `zone` -
